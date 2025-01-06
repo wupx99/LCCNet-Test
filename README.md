@@ -27,6 +27,55 @@ pip install -r requirements.txt
 
 Pre-trained models can be downloaded from [google drive](https://drive.google.com/drive/folders/1VbQV3ERDeT3QbdJviNCN71yoWIItZQnl?usp=sharing)
 
+## KITTI Odometry Dataset
+```
+odometry_color$ tree -L 3
+.
+├── poses
+│   ├── 00.txt
+│   ├── 01.txt
+│   ├── 02.txt
+│   ├── 03.txt
+│   ├── 04.txt
+│   ├── 05.txt
+│   ├── 06.txt
+│   ├── 07.txt
+│   ├── 08.txt
+│   ├── 09.txt
+│   └── 10.txt
+└── sequences
+├── 00
+│   ├── calib.txt
+│   ├── image_2
+│   ├── image_3
+│   ├── times.txt
+│   └── velodyne
+├── 01
+│   ├── calib.txt
+│   ├── image_2
+│   ├── image_3
+│   ├── times.txt
+│   └── velodyne
+├── 02
+│   ├── calib.txt
+│   ├── image_2
+│   ├── image_3
+│   ├── times.txt
+│   └── velodyne
+├── 03
+│   ├── calib.txt
+│   ├── image_2
+│   ├── image_3
+│   ├── times.txt
+│   └── velodyne
+├── 04
+│   ├── calib.txt
+│   ├── image_2
+│   ├── image_3
+│   ├── times.txt
+│   └── velodyne
+```
+
 ## Evaluation
 
 1. Download [KITTI odometry dataset](http://www.cvlibs.net/datasets/kitti/eval_odometry.php).
