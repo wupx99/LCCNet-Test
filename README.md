@@ -15,11 +15,7 @@ Official PyTorch implementation of the paper “LCCNet: Lidar and Camera Self-Ca
 
 ## Requirements
 
-* python 3.6 (recommend to use [Anaconda](https://www.anaconda.com/))
-* PyTorch==1.0.1.post2
-* Torchvision==0.2.2
-* Install requirements and dependencies
-```commandline
+* python 3.8 (recommend to use [Anaconda](https://www.anaconda.com/))
 pip install -r requirements.txt
 ```
 
@@ -51,24 +47,6 @@ odometry_color$ tree -L 3
 │   ├── times.txt
 │   └── velodyne
 ├── 01
-│   ├── calib.txt
-│   ├── image_2
-│   ├── image_3
-│   ├── times.txt
-│   └── velodyne
-├── 02
-│   ├── calib.txt
-│   ├── image_2
-│   ├── image_3
-│   ├── times.txt
-│   └── velodyne
-├── 03
-│   ├── calib.txt
-│   ├── image_2
-│   ├── image_3
-│   ├── times.txt
-│   └── velodyne
-├── 04
 │   ├── calib.txt
 │   ├── image_2
 │   ├── image_3
