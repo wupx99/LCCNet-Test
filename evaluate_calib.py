@@ -48,6 +48,7 @@ from math import radians
 from utils import invert_pose
 from torchvision import transforms
 
+from torch.cuda.amp import autocast
 
 # import matplotlib
 # matplotlib.rc("font",family='AR PL UMing CN')
@@ -57,16 +58,18 @@ font_EN = {'family': 'Times New Roman', 'weight': 'normal', 'size': 16}
 font_CN = {'family': 'AR PL UMing CN', 'weight': 'normal', 'size': 16}
 plt_size = 10.5
 
+torch.cuda.empty_cache()
+
 ex = Experiment("LCCNet-evaluate-iterative")
 ex.captured_out_filter = apply_backspaces_and_linefeeds
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 # noinspection PyUnusedLocal
 @ex.config
 def config():
     dataset = 'kitti/odom'
-    data_folder = './kitti_odometry_color/dataset/'
+    data_folder = '/data/downloads/kitti_odom_color'
     test_sequence = 0
     use_prev_output = False
     max_t = 1.5
@@ -85,19 +88,21 @@ def config():
     save_log = True
     dropout = 0.0
     max_depth = 80.
-    iterative_method = 'multi_range' # ['multi_range', 'single_range', 'single']
+    iterative_method = 'single' # ['multi_range', 'single_range', 'single']
     output = './output'
     save_image = False
     outlier_filter = True
     outlier_filter_th = 10
     out_fig_lg = 'EN' # [EN, CN]
 
+model_path = '/data/downloads/LCCNet_pretrained'
+
 weights = [
-   './LCCNet_pretrained/kitti_iter1.tar',
-   './LCCNet_pretrained/kitti_iter2.tar',
-   './LCCNet_pretrained/kitti_iter3.tar',
-   './LCCNet_pretrained/kitti_iter4.tar',
-   './LCCNet_pretrained/kitti_iter5.tar',
+   model_path + '/kitti_iter1.tar',
+   model_path + '/kitti_iter2.tar',
+   model_path + '/kitti_iter3.tar',
+   model_path + '/kitti_iter4.tar',
+   model_path + '/kitti_iter5.tar',
 ]
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -176,7 +181,7 @@ def main(_config, seed):
     def init_fn(x):
         return _init_fn(x, seed)
 
-    num_worker = 8
+    num_worker = 1
     batch_size = 1
 
     TestImgLoader = torch.utils.data.DataLoader(dataset=dataset_val,
@@ -219,13 +224,15 @@ def main(_config, seed):
 
     if _config['save_log']:
         os.makedirs('results_for_paper', exist_ok=True)
-        log_file = f'./results_for_paper/log_seq{_config["test_sequence"]}.csv'
-        log_file = csv.writer(log_file)
+        log_file_path = f'./results_for_paper/log_seq{_config["test_sequence"]}.csv'
+        print(f"Saving log to {log_file_path}")
+        log_file = open(log_file_path, 'w', newline='')
+        log_writer = csv.writer(log_file)
         header = ['frame']
         for i in range(len(weights) + 1):
             header += [f'iter{i}_error_t', f'iter{i}_error_r', f'iter{i}_error_x', f'iter{i}_error_y',
                        f'iter{i}_error_z', f'iter{i}_error_r', f'iter{i}_error_p', f'iter{i}_error_y']
-        log_file.writerow(header)
+        log_writer.writerow(header)
 
     show = _config['show']
     # save image to the output path
@@ -446,12 +453,17 @@ def main(_config, seed):
         # t1 = time.time()
 
         # Run model
-        with torch.no_grad():
+        with torch.no_grad(), autocast():
             for iteration in range(start, len(weights)):
                 # Run the i-th network
                 t1 = time.time()
                 if _config['iterative_method'] == 'single_range' or _config['iterative_method'] == 'single':
-                    T_predicted, R_predicted = models[0](rgb_resize, lidar_resize)
+                    try:
+                        T_predicted, R_predicted = models[0](rgb_resize, lidar_resize)
+                    except RuntimeError as e:
+                        print(f"Error occurred during model forward pass: {e}")
+                        print(f"Input shapes: RGB={rgb_resize.shape}, Lidar={lidar_resize.shape}")
+                        raise
                 elif _config['iterative_method'] == 'multi_range':
                     T_predicted, R_predicted = models[iteration](rgb_resize, lidar_resize)
                 run_time = time.time() - t1
@@ -531,7 +543,7 @@ def main(_config, seed):
         prev_rot_error = quaternion_from_matrix(prev_RT).unsqueeze(0)
 
         if _config['save_log']:
-            log_file.writerow(log_string)
+            log_writer.writerow(log_string)
 
     # Yaw（偏航）：欧拉角向量的y轴
     # Pitch（俯仰）：欧拉角向量的x轴
@@ -778,4 +790,6 @@ def main(_config, seed):
     avg_time = total_time / len(TestImgLoader)
     print("average runing time on {} iteration: {} s".format(len(weights), avg_time))
     print("End!")
+    
+    log_file.close()
 

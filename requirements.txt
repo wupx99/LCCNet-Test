@@ -26,7 +26,7 @@ Pillow
 scikit-image
 torch>=1.10.0
 torchvision>=0.11.0
-scared
+sacred
 # -e ./models/correlation_package --no-build-isolation
 # 注意，这里编译了一个本地库："correlation_package"(-e ./models/correlation_package)。
 # 因为pyproject.toml使用的torch文件比较古老，不能匹配本地cuda版本，同时会下载一个版本安装，会非常慢，
